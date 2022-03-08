@@ -17,7 +17,7 @@ h3{
 
 a{
     padding-left: 10px;
-    font-size: 24px;
+    font-size: 20px;
 }
 
 th{
@@ -28,6 +28,7 @@ th{
 
 td{
     padding: 20px;
+    color: white;
 }
 
 li{
@@ -68,7 +69,7 @@ li{
     padding: 5px;
 }
 
-.resourceList{
+.tableList{
     color: white;
     font-size: 24px;
 }
