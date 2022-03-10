@@ -15,6 +15,7 @@ function UserDetails() {
 
     const [resourcesList, setResourcesList] = useState([]);
     const [patientDataReceiptsList, setPatientDataReceiptsList] = useState([]);
+    const [patientID, setPatientID] = useState('')
 
 
 
@@ -27,6 +28,7 @@ function UserDetails() {
         });
         var data = response.data;
         console.log(data.entry[0].resource.id)
+        setPatientID(data.entry[0].resource.id)
         await patient_data_receipt_list(data.entry[0].resource.id)
         await resource_list(data.entry[0].resource.id)
     }
@@ -61,6 +63,36 @@ function UserDetails() {
         console.log("patient data receipt list retrieval succesful");
     }
 
+    const removePDR = async (messageHeaderID, bundleID) => {
+        console.log(messageHeaderID);
+        const response = await axios({
+            method: "DELETE",
+            url: "http://localhost:4003/delete_messageHeader",
+            data: {
+                messageHeaderID: messageHeaderID,
+            },
+        })
+        console.log(response)
+        if (response.status == 200) {
+            console.log("succesfully removed message header")
+            await removeBundle(bundleID)
+        }
+    }
+
+    const removeBundle = async (bundleID) => {
+        console.log(bundleID)
+        const response = await axios({
+            method: "DELETE",
+            url: "http://localhost:4003/delete_bundle",
+            data: {
+                bundleID: bundleID,
+            },
+        })
+        console.log(response.data)
+        console.log("succesfully removed bundle instance");
+        await patient_data_receipt_list(patientID);
+    }
+
     return (
         <Container fluid className="content-block">
             <Row style={{ paddingTop: "20px" }}>
@@ -85,6 +117,7 @@ function UserDetails() {
                                     <th>Last Updated</th>
                                     <th>Bundle URL</th>
                                     <th>Resource Content URL</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -94,6 +127,7 @@ function UserDetails() {
                                         <td>{new Date(entry.resource.meta.lastUpdated).toLocaleString()}</td>
                                         <td><a href={"http://ohm.healthmanager.pub.aws.mitre.org:8080/fhir/" + entry.resource.focus[1].reference}>{"http://ohm.healthmanager.pub.aws.mitre.org:8080/fhir/" + entry.resource.focus[1].reference}</a></td>
                                         <td><a href={entry.fullUrl}>{entry.fullUrl}</a></td>
+                                        <td><Button variant='delete' onClick={() => removePDR(entry.resource.resourceType + "/" + entry.resource.id, entry.resource.focus[1].reference)}>Delete</Button></td>
                                     </tr>
                                 ))}
                             </tbody>

@@ -3,6 +3,32 @@ const router = express.Router();
 const axios = require('axios');
 const https = require('https');
 
+
+//provide a view of patient resource via a username
+router.post('/search_username', function (req, res) {
+
+    const { userName } = req.body;
+    console.log("req", req.body);
+
+    const agent = new https.Agent({
+        rejectUnauthorized: false
+    });
+
+    axios({
+        method: "GET",
+        url: `http://ohm.healthmanager.pub.aws.mitre.org:8080/fhir/Patient?identifier=urn%3Amitre%3Ahealthmanager%3Aaccount%3Ausername%7C${userName}`,
+        httpsAgent: agent,
+    }).then(response => {
+        var data = response.data;
+        console.log(data)
+        res.status(200).json(response.data);
+    })
+        .catch((err) => {
+            console.log(err.message)
+            res.status(500).json({ message: err.message });
+        });
+});
+
 //provide a view of all resources related to a specific patient
 router.post('/retrieve_all_resources', function (req, res) {
 
@@ -54,10 +80,10 @@ router.post('/retrieve_patient_data_receipts', function (req, res) {
 });
 
 
-//provide a view of patient resource via a username
-router.post('/search_username', function (req, res) {
+//delete the MessageHeader instance of a patient data receipt
+router.delete('/delete_messageHeader', function (req, res) {
 
-    const { userName } = req.body;
+    const { messageHeaderID } = req.body;
     console.log("req", req.body);
 
     const agent = new https.Agent({
@@ -65,13 +91,41 @@ router.post('/search_username', function (req, res) {
     });
 
     axios({
-        method: "GET",
-        url: `http://ohm.healthmanager.pub.aws.mitre.org:8080/fhir/Patient?identifier=urn%3Amitre%3Ahealthmanager%3Aaccount%3Ausername%7C${userName}`,
+        method: "DELETE",
+        url: `http://ohm.healthmanager.pub.aws.mitre.org:8080/fhir/${messageHeaderID}`,
         httpsAgent: agent,
     }).then(response => {
-        var data = response.data;
-        console.log(data)
-        res.status(200).json(response.data);
+        if (response.status == 200) {
+            console.log("sucessfully removed message header of patient data receipt")
+            res.status(200).json(response.data);
+        }
+    })
+        .catch((err) => {
+            console.log(err.message)
+            res.status(500).json({ message: err.message });
+        });
+});
+
+
+//delete the bundle instance of a patient data receipt
+router.delete('/delete_bundle', function (req, res) {
+
+    const { bundleID } = req.body;
+    console.log("req", req.body);
+
+    const agent = new https.Agent({
+        rejectUnauthorized: false
+    });
+
+    axios({
+        method: "DELETE",
+        url: `http://ohm.healthmanager.pub.aws.mitre.org:8080/fhir/${bundleID}`,
+        httpsAgent: agent,
+    }).then(response => {
+        if (response.status == 200) {
+            console.log("sucessfully removed bundle instance of patient data receipt")
+            res.status(200).json(response.data);
+        }
     })
         .catch((err) => {
             console.log(err.message)

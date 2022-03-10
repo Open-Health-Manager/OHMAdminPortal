@@ -59,6 +59,23 @@ li{
     color: #FFE800;
 }
 
+.btn-delete{
+    background: red;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    border: 1px solid #ffffff;
+    border-radius: 0px;
+    text-transform: uppercase;
+    width: 135px;
+    height: 45px;
+    margin-top: 15px;
+}
+
+.btn-delete:hover {
+    color: white;
+}
+
 .error-text{
     color: #C6401D;
     background-color: #FCF0ED;
