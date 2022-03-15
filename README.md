@@ -8,7 +8,7 @@ The initial app implementation is built by using React.js as the front-end web 
 
 ## Usage
 ### Running the OHMAdminPortal locally
-To run the OHMAdminPortaln locally:
+To run the OHMAdminPortal locally:
 1. first clone the repository (github repo) and open it in Visual Studio code. 
 2. next cd into the client folder and install project dependencies using npm install
 3. open up the Visual Studio terminal and start up the local Express server via npm run server
