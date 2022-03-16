@@ -15,31 +15,38 @@ function UserDetails() {
 
     const [resourcesList, setResourcesList] = useState([]);
     const [patientDataReceiptsList, setPatientDataReceiptsList] = useState([]);
-    const [patientID, setPatientID] = useState('')
+    const [patientID, setPatientID] = useState('');
+    const [fhirServer, setFhirServer] = useState('');
 
 
 
     const onSubmit = async (data) => {
         console.log(data)
+        const server = data.server
+        setFhirServer(server)
+        
         const response = await axios({
             method: "POST",
             url: "http://localhost:4003/search_username",
             data: data
         });
+        
         var data = response.data;
-        console.log(data.entry[0].resource.id)
+        console.log(data.entry[0].resource.id, ":", fhirServer)
+        
         setPatientID(data.entry[0].resource.id)
-        await patient_data_receipt_list(data.entry[0].resource.id)
-        await resource_list(data.entry[0].resource.id)
+        await patient_data_receipt_list(data.entry[0].resource.id, server)
+        await resource_list(data.entry[0].resource.id, server)
     }
 
-    const resource_list = async (patientID) => {
+    const resource_list = async (patientID, server) => {
         console.log(patientID)
         const response = await axios({
             method: "POST",
             url: "http://localhost:4003/retrieve_all_resources",
             data: {
-                patientID: patientID
+                patientID: patientID,
+                server: server
             },
         })
         var data = response.data;
@@ -48,13 +55,14 @@ function UserDetails() {
         console.log("resource list retrieval succesful");
     }
 
-    const patient_data_receipt_list = async (patientID) => {
+    const patient_data_receipt_list = async (patientID, server) => {
         console.log(patientID)
         const response = await axios({
             method: "POST",
             url: "http://localhost:4003/retrieve_patient_data_receipts",
             data: {
-                patientID: patientID
+                patientID: patientID,
+                server: server
             },
         })
         var data = response.data;
@@ -70,6 +78,7 @@ function UserDetails() {
             url: "http://localhost:4003/delete_messageHeader",
             data: {
                 messageHeaderID: messageHeaderID,
+                server: fhirServer
             },
         })
         console.log(response)
@@ -86,11 +95,13 @@ function UserDetails() {
             url: "http://localhost:4003/delete_bundle",
             data: {
                 bundleID: bundleID,
+                server: fhirServer
             },
         })
         console.log(response.data)
         console.log("succesfully removed bundle instance");
-        await patient_data_receipt_list(patientID);
+        await patient_data_receipt_list(patientID, fhirServer);
+        await resource_list(patientID, fhirServer)
     }
 
     return (
@@ -99,7 +110,9 @@ function UserDetails() {
                 <Col md={6}>
                     <h1>User Details Search</h1>
                     <form onSubmit={handleSubmit(onSubmit)}>
-                        <input type="text" className="form-control" {...register("userName", { required: true })} />
+                        <h3>Server: </h3><input type="text" className="form-control" {...register("server", { required: true })} />
+                        {errors.server && <p className="error-text">fhir server is required</p>}
+                        <h3>Username: </h3><input type="text" className="form-control" {...register("userName", { required: true })} />
                         {errors.userName && <p className="error-text">user name is required</p>}
                         <Button variant='form' type="submit">Submit</Button>
                     </form>
@@ -125,7 +138,7 @@ function UserDetails() {
                                     <tr className="tableList" key={index}>
                                         <td>{entry.resource.resourceType}</td>
                                         <td>{new Date(entry.resource.meta.lastUpdated).toLocaleString()}</td>
-                                        <td><a href={"http://ohm.healthmanager.pub.aws.mitre.org:8080/fhir/" + entry.resource.focus[1].reference}>{"http://ohm.healthmanager.pub.aws.mitre.org:8080/fhir/" + entry.resource.focus[1].reference}</a></td>
+                                        <td><a href={fhirServer + entry.resource.focus[1].reference}>{fhirServer + entry.resource.focus[1].reference}</a></td>
                                         <td><a href={entry.fullUrl}>{entry.fullUrl}</a></td>
                                         <td><Button variant='delete' onClick={() => removePDR(entry.resource.resourceType + "/" + entry.resource.id, entry.resource.focus[1].reference)}>Delete</Button></td>
                                     </tr>

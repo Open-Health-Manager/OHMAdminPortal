@@ -7,8 +7,11 @@ const https = require('https');
 //provide a view of patient resource via a username
 router.post('/search_username', function (req, res) {
 
-    const { userName } = req.body;
     console.log("req", req.body);
+    const { userName } = req.body;
+    const { server } = req.body;
+    console.log("req", req.body);
+    console.log(`${server}Patient?identifier=urn%3Amitre%3Ahealthmanager%3Aaccount%3Ausername%7C${userName}`)
 
     const agent = new https.Agent({
         rejectUnauthorized: false
@@ -16,7 +19,7 @@ router.post('/search_username', function (req, res) {
 
     axios({
         method: "GET",
-        url: `http://ohm.healthmanager.pub.aws.mitre.org:8080/fhir/Patient?identifier=urn%3Amitre%3Ahealthmanager%3Aaccount%3Ausername%7C${userName}`,
+        url: `${server}Patient?identifier=urn%3Amitre%3Ahealthmanager%3Aaccount%3Ausername%7C${userName}`,
         httpsAgent: agent,
     }).then(response => {
         var data = response.data;
@@ -33,6 +36,7 @@ router.post('/search_username', function (req, res) {
 router.post('/retrieve_all_resources', function (req, res) {
 
     const { patientID } = req.body;
+    const { server } = req.body;
     console.log("req", req.body);
 
     const agent = new https.Agent({
@@ -41,7 +45,7 @@ router.post('/retrieve_all_resources', function (req, res) {
 
     axios({
         method: "GET",
-        url: `http://ohm.healthmanager.pub.aws.mitre.org:8080/fhir/Patient/${patientID}/$everything`,
+        url: `${server}Patient/${patientID}/$everything`,
         httpsAgent: agent,
     }).then(response => {
         var data = response.data;
@@ -58,6 +62,7 @@ router.post('/retrieve_all_resources', function (req, res) {
 router.post('/retrieve_patient_data_receipts', function (req, res) {
 
     const { patientID } = req.body;
+    const { server } = req.body;
     console.log("req", req.body);
 
     const agent = new https.Agent({
@@ -66,7 +71,7 @@ router.post('/retrieve_patient_data_receipts', function (req, res) {
 
     axios({
         method: "GET",
-        url: `http://ohm.healthmanager.pub.aws.mitre.org:8080/fhir/MessageHeader?focus=Patient/${patientID}`,
+        url: `${server}MessageHeader?focus=Patient/${patientID}`,
         httpsAgent: agent,
     }).then(response => {
         var data = response.data;
@@ -84,6 +89,7 @@ router.post('/retrieve_patient_data_receipts', function (req, res) {
 router.delete('/delete_messageHeader', function (req, res) {
 
     const { messageHeaderID } = req.body;
+    const { server } = req.body;
     console.log("req", req.body);
 
     const agent = new https.Agent({
@@ -92,9 +98,10 @@ router.delete('/delete_messageHeader', function (req, res) {
 
     axios({
         method: "DELETE",
-        url: `http://ohm.healthmanager.pub.aws.mitre.org:8080/fhir/${messageHeaderID}`,
+        url: `${server}${messageHeaderID}`,
         httpsAgent: agent,
     }).then(response => {
+        console.log(response);
         if (response.status == 200) {
             console.log("sucessfully removed message header of patient data receipt")
             res.status(200).json(response.data);
@@ -111,6 +118,7 @@ router.delete('/delete_messageHeader', function (req, res) {
 router.delete('/delete_bundle', function (req, res) {
 
     const { bundleID } = req.body;
+    const { server } = req.body;
     console.log("req", req.body);
 
     const agent = new https.Agent({
@@ -119,7 +127,7 @@ router.delete('/delete_bundle', function (req, res) {
 
     axios({
         method: "DELETE",
-        url: `http://ohm.healthmanager.pub.aws.mitre.org:8080/fhir/${bundleID}`,
+        url: `${server}${bundleID}`,
         httpsAgent: agent,
     }).then(response => {
         if (response.status == 200) {
