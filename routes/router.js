@@ -141,5 +141,39 @@ router.delete('/delete_bundle', function (req, res) {
         });
 });
 
+//delete the bundle instance of a patient data receipt
+router.post('/rebuild_account', function (req, res) {
+
+    const { username } = req.body;
+    const { server } = req.body;
+    console.log("req", req.body);
+
+    const agent = new https.Agent({
+        rejectUnauthorized: false
+    });
+
+    axios({
+        method: "POST",
+        url: `${server}$rebuild-account`,
+        httpsAgent: agent,
+        data: {
+            resourceType: "Parameters",
+            parameter: [ {
+                name: "username",
+                valueString: username
+              } ]
+          },
+    }).then(response => {
+        if (response.status == 200) {
+            console.log("sucessfully rebuilt account: ", username)
+            res.status(200).json(response.data);
+        }
+    })
+        .catch((err) => {
+            console.log(err.message)
+            res.status(500).json({ message: err.message });
+        });
+});
+
 
 module.exports = router;

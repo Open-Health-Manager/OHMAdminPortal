@@ -17,11 +17,14 @@ function UserDetails() {
     const [patientDataReceiptsList, setPatientDataReceiptsList] = useState([]);
     const [patientID, setPatientID] = useState('');
     const [fhirServer, setFhirServer] = useState('');
+    const [accountUsername, setAccountUsername] = useState('');
 
 
 
     const onSubmit = async (data) => {
         console.log(data)
+        const username = data.userName
+        setAccountUsername(username)
         const server = data.server
         setFhirServer(server)
         
@@ -72,6 +75,14 @@ function UserDetails() {
     }
 
     const removePDR = async (messageHeaderID, bundleID) => {
+        await removeMessageHeader(messageHeaderID)
+        await rebuildAccount()
+        await patient_data_receipt_list(patientID, fhirServer);
+        await resource_list(patientID, fhirServer)
+        await removeBundle(bundleID)
+    }
+
+    const removeMessageHeader = async (messageHeaderID) => {
         console.log(messageHeaderID);
         const response = await axios({
             method: "DELETE",
@@ -84,7 +95,6 @@ function UserDetails() {
         console.log(response)
         if (response.status == 200) {
             console.log("succesfully removed message header")
-            await removeBundle(bundleID)
         }
     }
 
@@ -100,8 +110,21 @@ function UserDetails() {
         })
         console.log(response.data)
         console.log("succesfully removed bundle instance");
-        await patient_data_receipt_list(patientID, fhirServer);
-        await resource_list(patientID, fhirServer)
+        
+    }
+
+    const rebuildAccount = async () => {
+        console.log("in rebuild account")
+        const response = await axios({
+            method: "POST",
+            url: "http://localhost:4003/rebuild_account",
+            data: {
+                username: accountUsername,
+                server: fhirServer
+            },
+        })
+        console.log(response.data)
+        console.log("succesfully rebuilt account: ", accountUsername);
     }
 
     return (
@@ -138,9 +161,9 @@ function UserDetails() {
                                     <tr className="tableList" key={index}>
                                         <td>{entry.resource.resourceType}</td>
                                         <td>{new Date(entry.resource.meta.lastUpdated).toLocaleString()}</td>
-                                        <td><a href={fhirServer + entry.resource.focus[1].reference}>{fhirServer + entry.resource.focus[1].reference}</a></td>
+                                        <td><a href={fhirServer + entry.resource.focus[0].reference}>{fhirServer + entry.resource.focus[0].reference}</a></td>
                                         <td><a href={entry.fullUrl}>{entry.fullUrl}</a></td>
-                                        <td><Button variant='delete' onClick={() => removePDR(entry.resource.resourceType + "/" + entry.resource.id, entry.resource.focus[1].reference)}>Delete</Button></td>
+                                        <td><Button variant='delete' onClick={() => removePDR(entry.resource.resourceType + "/" + entry.resource.id, entry.resource.focus[0].reference)}>Delete</Button></td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -163,13 +186,15 @@ function UserDetails() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {resourcesList.entry.map((entry, index) => (
-                                    <tr className="tableList" key={index}>
-                                        <td>{entry.resource.resourceType}</td>
-                                        <td>{new Date(entry.resource.meta.lastUpdated).toLocaleString()}</td>
-                                        <td><a href={entry.fullUrl}>{entry.fullUrl}</a></td>
-                                    </tr>
-                                ))}
+                                {resourcesList.entry.map((entry, index) => { 
+                                    if ((entry.resource.resourceType != "MessageHeader") && (entry.resource.resourceType != "Bundle")) {
+                                        return <tr className="tableList" key={index}>
+                                            <td>{entry.resource.resourceType}</td>
+                                            <td>{new Date(entry.resource.meta.lastUpdated).toLocaleString()}</td>
+                                            <td><a href={entry.fullUrl}>{entry.fullUrl}</a></td>
+                                        </tr>
+                                    }
+                                })}
                             </tbody>
                         </Table>
 
