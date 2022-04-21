@@ -127,6 +127,20 @@ function UserDetails() {
         console.log("succesfully rebuilt account: ", accountUsername);
     }
 
+    const updateResourceListPage = async (pageLink) => {
+        console.log("in getLink")
+        const response = await axios({
+            method: "POST",
+            url: "http://localhost:4003/get_link",
+            data: {
+                link: pageLink,
+            },
+        })
+        console.log(response.data)
+        setResourcesList(response.data)
+        console.log("succesfully retrieved link: ", pageLink);
+    }
+
     return (
         <Container fluid className="content-block">
             <Row style={{ paddingTop: "20px" }}>
@@ -176,22 +190,37 @@ function UserDetails() {
                 <Row>
                     <Col md={6}>
                         <h2 style={{ paddingTop: "30px" }}>Resources List</h2>
-
+                        { 
+                            resourcesList.link.map((aLink, index) => {
+                                if (aLink.relation === 'next') {
+                                    return <Button variant='form' onClick={() => updateResourceListPage(aLink.url)}>Next</Button>
+                                }
+                                if (aLink.relation === 'previous') {
+                                    return <Button variant='form' onClick={() => updateResourceListPage(aLink.url)}>Previous</Button>
+                                }
+                            })
+                        }
                         <Table striped bordered hover variant="dark" responsive="lg">
                             <thead>
                                 <tr>
                                     <th>Type</th>
                                     <th>Last Updated</th>
                                     <th>Resource Content URL</th>
+                                    <th>Summary</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {resourcesList.entry.map((entry, index) => { 
-                                    if ((entry.resource.resourceType != "MessageHeader") && (entry.resource.resourceType != "Bundle")) {
+                                    if ((entry.resource.resourceType !== "MessageHeader") && (entry.resource.resourceType !== "Bundle")) {
+                                        var summaryHTML = '<div></div>'
+                                        if (entry.resource.text != null) {
+                                            summaryHTML = entry.resource.text.div;
+                                        }
                                         return <tr className="tableList" key={index}>
                                             <td>{entry.resource.resourceType}</td>
                                             <td>{new Date(entry.resource.meta.lastUpdated).toLocaleString()}</td>
                                             <td><a href={entry.fullUrl}>{entry.fullUrl}</a></td>
+                                            <td dangerouslySetInnerHTML={{__html: summaryHTML}} />
                                         </tr>
                                     }
                                 })}

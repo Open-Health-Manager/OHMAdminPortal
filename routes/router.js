@@ -175,5 +175,31 @@ router.post('/rebuild_account', function (req, res) {
         });
 });
 
+// make a raw request, e.g. follow a link
+router.post('/get_link', function (req, res) {
+
+    const { link } = req.body;
+    console.log("req", req.body);
+
+    const agent = new https.Agent({
+        rejectUnauthorized: false
+    });
+
+    axios({
+        method: "GET",
+        url: `${link}`,
+        httpsAgent: agent,
+    }).then(response => {
+        if (response.status == 200) {
+            console.log("sucessfully followed link: ", link)
+            res.status(200).json(response.data);
+        }
+    })
+        .catch((err) => {
+            console.log(err.message)
+            res.status(500).json({ message: err.message });
+        });
+});
+
 
 module.exports = router;
